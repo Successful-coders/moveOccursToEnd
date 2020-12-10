@@ -1,0 +1,143 @@
+Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/10/20 09:24:36
+main.asm						     Page 1 - 1
+
+
+				.386
+				.model flat
+
+				moveChar macro line, char, length
+					xor		ecx, ecx		; чистим счетчик цикла
+					mov		cl, length		; помещаем длину строки в счетчик цикла
+
+					mov		edi, line		; записываем указатель на строку в edi
+					mov		esi, edi		; копируем значение edi в esi
+
+					shift:					; цикл сдвига символов не равных перемещаемому вправо
+						lodsb				; считываем первый символ из esi в al
+						cmp		al, char	; сравниваем символ в al с перемещаемым
+						je		continue	; если равен, то игнорируем
+						stosb				; иначе: записываем al в текущую позицию edi
+
+						continue:
+					LOOP shift
+
+					mov		eax, esi		; запоминаем индекс последнего символа
+					dec		eax
+					sub		esi, edi		; высчитываем общее число от числа несоответствующих
+					mov		ecx, esi		; ecx - количество соответствующих символов в строке 
+					cmp		ecx, 0			; если заменяемый символ не был найден
+					je		exit			; завершаем макрокоманду
+
+					mov		edi, eax		; иначе: помещаем в edi конец строки
+					mov		al, char		; помещаем в al сам символ
+					xor		ebx, ebx		; сдвиг строки = 0
+
+					put:
+						mov		[edi+ebx], al ; вставляем символ
+						dec		ebx			  ; уменьшаем сдвиг на 1
+					LOOP put
+
+					exit:	; выход
+				ENDM
+
+ 00000000			.data
+ 00000000 00000000			sourceLine		dd	?	; входная строка
+ 00000004 00				occurChar		db	?	; перемещаемый символ
+ 00000005 00				lineLength		db	?	; длина строки
+
+ 00000000			.code
+ 00000000				_moveOccursToEnd@12 PROC
+ 00000000  55					push	ebp
+
+ 00000001  8B 5C 24 08				mov		ebx, [esp+8]		; читаем 1 переменную
+ 00000005  89 1D 00000000 R			mov		sourceLine, ebx		; сохраняем 1 переменную
+
+ 0000000B  8B 5C 24 0C				mov		ebx, [esp+12]		; читаем 2 переменную
+ 0000000F  88 1D 00000004 R			mov		occurChar, bl		; сохраняем из byte
+
+ 00000015  8B 5C 24 10				mov		ebx, [esp+16]		; читаем 3 переменную
+ 00000019  88 1D 00000005 R			mov		lineLength, bl		; сохраняем из byte
+
+						moveChar	sourceLine, occurChar, lineLength		; вызываем макрокоманду
+ 0000001F  33 C9	     1		xor		ecx, ecx		; чистим счетчик цикла
+ 00000021  8A 0D 00000005 R  1		mov		cl, lineLength		; помещаем длину строки в счетчик цикла
+ 00000027  8B 3D 00000000 R  1		mov		edi, sourceLine		; записываем указатель на строку в edi
+ 0000002D  8B F7	     1		mov		esi, edi		; копируем значение edi в esi
+ 0000002F		     1		shift:					; цикл сдвига символов не равных перемещаемому вправо
+ 0000002F  AC		     1			lodsb				; считываем первый символ из esi в al
+ 00000030  3A 05 00000004 R  1			cmp		al, occurChar	; сравниваем символ в al с перемещаемым
+ 00000036  74 01	     1			je		continue	; если равен, то игнорируем
+ 00000038  AA		     1			stosb				; иначе: записываем al в текущую позицию edi
+ 00000039		     1			continue:
+ 00000039  E2 F4	     1		LOOP shift
+ 0000003B  8B C6	     1		mov		eax, esi		; запоминаем индекс последнего символа
+ 0000003D  48		     1		dec		eax
+ 0000003E  2B F7	     1		sub		esi, edi		; высчитываем общее число от числа несоответствующих
+ 00000040  8B CE	     1		mov		ecx, esi		; ecx - количество соответствующих символов в строке 
+ 00000042  83 F9 00	     1		cmp		ecx, 0			; если заменяемый символ не был найден
+ 00000045  74 0F	     1		je		exit			; завершаем макрокоманду
+ 00000047  8B F8	     1		mov		edi, eax		; иначе: помещаем в edi конец строки
+ 00000049  A0 00000004 R     1		mov		al, occurChar		; помещаем в al сам символ
+ 0000004E  33 DB	     1		xor		ebx, ebx		; сдвиг строки = 0
+ 00000050		     1		put:
+ 00000050  88 04 1F	     1			mov		[edi+ebx], al ; вставляем символ
+ 00000053  4B		     1			dec		ebx			  ; уменьшаем сдвиг на 1
+ 00000054  E2 FA	     1		LOOP put
+ 00000056		     1		exit:	; выход
+
+ 00000056  5D					pop		ebp
+ 00000057  C3					ret
+ 00000058				_moveOccursToEnd@12 ENDP
+				END
+Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/10/20 09:24:36
+main.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+moveChar . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000006 DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000058 DWord	  Public  'CODE'	
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+_moveOccursToEnd@12  . . . . . .	P Near	 00000000 _TEXT	Length= 00000058 Public
+  shift  . . . . . . . . . . . .	L Near	 0000002F _TEXT	
+  continue . . . . . . . . . . .	L Near	 00000039 _TEXT	
+  put  . . . . . . . . . . . . .	L Near	 00000050 _TEXT	
+  exit . . . . . . . . . . . . .	L Near	 00000056 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000000h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+lineLength . . . . . . . . . . .	Byte	 00000005 _DATA	
+occurChar  . . . . . . . . . . .	Byte	 00000004 _DATA	
+sourceLine . . . . . . . . . . .	DWord	 00000000 _DATA	
+
+	   0 Warnings
+	   0 Errors

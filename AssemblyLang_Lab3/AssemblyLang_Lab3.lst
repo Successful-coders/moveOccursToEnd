@@ -1,0 +1,141 @@
+Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/09/20 22:11:57
+main.asm						     Page 1 - 1
+
+
+				.386
+				.model flat,C
+
+				move macro string,char,len
+					XOR ECX, ECX     ; чистим счетчик
+					MOV cl,len       ; помещаем длину строки в счетчик цикла
+					MOV ah,cl        ; счетчик заменяемых символов в строке
+					MOV EDI,string   ; записываем указатель на строку в EDI
+					ADD EDI, ECX     ; перемещаемся к последнему символу в строке
+					DEC EDI
+					MOV ESI, EDI     ; копируем значение EDI в ESI
+					MOV EBP,2        ; 2 - сдвиг при обходе с конца
+					mv:			     ; цикл сдвига символов не равных перемещаемому вправо
+						LODSB        ; считываем первый символ из ESI в AL
+						DEC ESI      ; возвращаем ESI назад
+						CMP AL, char ; сравниваем символ в AL с перемещаемым
+						JE skp       ; если == - игнорируем
+						STOSB		 ; иначе записываем AL в текущую позицию EDI
+						DEC AH		 ; AH--
+						SUB EDI, EBP ; сдвигаем EDI назад на 2
+						skp:
+						DEC ESI		; сдвигаем ESI еще на 1
+					LOOP mv
+					CMP ah,0		; если заменяемый символ не был найден
+					JE exit			; завершаем макрокоманду
+					MOV CL, AH		; помещаем в ECX кол-во символов для вставки
+					MOV AL, char	; а в AL сам символ
+					MOV EDI, string ; начиная с начала строки
+					XOR EBX, EBX	; сдвиг строки = 0
+					put:
+						MOV [EDI+EBX], AL ; вставляем символ
+						INC EBX			  ; увеличиваем сдвиг на 1
+					LOOP put
+					exit:				  ; выход
+				ENDM
+
+ 00000000			.DATA
+ 00000000 00000000			src DD ? ; входная строка
+ 00000004 00				sym DB ? ; перемещаемый символ
+ 00000005 00				siz DB ? ; длина строки
+
+ 00000000			.CODE
+ 00000000				func PROC
+ 00000000  55					PUSH EBP
+ 00000001  8B 5C 24 08				MOV EBX, [ESP+8]  ; читаем 1 переменную
+ 00000005  89 1D 00000000 R			MOV SRC, EBX      ; сохраняем 1 переменную
+ 0000000B  8B 5C 24 0C				MOV EBX, [ESP+12] ; читаем 2 переменную
+ 0000000F  88 1D 00000004 R			MOV sym, bl	      ; сохраняем из byte
+ 00000015  8B 5C 24 10				MOV EBX, [ESP+16] ; читаем 3 переменную
+ 00000019  88 1D 00000005 R			MOV siz,bl        ; сохраняем из byte
+						MOVE src,sym,siz  ; вызываем макрокоманду
+ 0000001F  33 C9	     1		XOR ECX, ECX     ; чистим счетчик
+ 00000021  8A 0D 00000005 R  1		MOV cl,siz       ; помещаем длину строки в счетчик цикла
+ 00000027  8A E1	     1		MOV ah,cl        ; счетчик заменяемых символов в строке
+ 00000029  8B 3D 00000000 R  1		MOV EDI,src   ; записываем указатель на строку в EDI
+ 0000002F  03 F9	     1		ADD EDI, ECX     ; перемещаемся к последнему символу в строке
+ 00000031  4F		     1		DEC EDI
+ 00000032  8B F7	     1		MOV ESI, EDI     ; копируем значение EDI в ESI
+ 00000034  BD 00000002	     1		MOV EBP,2        ; 2 - сдвиг при обходе с конца
+ 00000039		     1		mv:			     ; цикл сдвига символов не равных перемещаемому вправо
+ 00000039  AC		     1			LODSB        ; считываем первый символ из ESI в AL
+ 0000003A  4E		     1			DEC ESI      ; возвращаем ESI назад
+ 0000003B  3A 05 00000004 R  1			CMP AL, sym ; сравниваем символ в AL с перемещаемым
+ 00000041  74 05	     1			JE skp       ; если == - игнорируем
+ 00000043  AA		     1			STOSB		 ; иначе записываем AL в текущую позицию EDI
+ 00000044  FE CC	     1			DEC AH		 ; AH--
+ 00000046  2B FD	     1			SUB EDI, EBP ; сдвигаем EDI назад на 2
+ 00000048		     1			skp:
+ 00000048  4E		     1			DEC ESI		; сдвигаем ESI еще на 1
+ 00000049  E2 EE	     1		LOOP mv
+ 0000004B  80 FC 00	     1		CMP ah,0		; если заменяемый символ не был найден
+ 0000004E  74 15	     1		JE exit			; завершаем макрокоманду
+ 00000050  8A CC	     1		MOV CL, AH		; помещаем в ECX кол-во символов для вставки
+ 00000052  A0 00000004 R     1		MOV AL, sym	; а в AL сам символ
+ 00000057  8B 3D 00000000 R  1		MOV EDI, src ; начиная с начала строки
+ 0000005D  33 DB	     1		XOR EBX, EBX	; сдвиг строки = 0
+ 0000005F		     1		put:
+ 0000005F  88 04 1F	     1			MOV [EDI+EBX], AL ; вставляем символ
+ 00000062  43		     1			INC EBX			  ; увеличиваем сдвиг на 1
+ 00000063  E2 FA	     1		LOOP put
+ 00000065		     1		exit:				  ; выход
+ 00000065  5D					POP EBP
+ 00000066  C3					RET
+ 00000067				func ENDP
+				END
+Microsoft (R) Macro Assembler Version 14.27.29112.0	    12/09/20 22:11:57
+main.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+move . . . . . . . . . . . . . .	Proc
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000006 DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000067 DWord	  Public  'CODE'	
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+func . . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000067 Public C
+  mv . . . . . . . . . . . . . .	L Near	 00000039 _TEXT	
+  skp  . . . . . . . . . . . . .	L Near	 00000048 _TEXT	
+  put  . . . . . . . . . . . . .	L Near	 0000005F _TEXT	
+  exit . . . . . . . . . . . . .	L Near	 00000065 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000001h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+siz  . . . . . . . . . . . . . .	Byte	 00000005 _DATA	
+src  . . . . . . . . . . . . . .	DWord	 00000000 _DATA	
+sym  . . . . . . . . . . . . . .	Byte	 00000004 _DATA	
+
+	   0 Warnings
+	   0 Errors
